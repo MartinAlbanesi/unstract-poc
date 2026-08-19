@@ -1,0 +1,29 @@
+# Upstream Unstract clone (pinned tag, recreated by bootstrap.ps1)
+/unstract/
+
+# SDD tooling artifacts (regenerated)
+.atl/
+
+# Environment files with credentials / secrets
+# (.env below already matches any .env file at any depth, incl. deployments/.env
+# and unstract/**/.env — these two are kept explicit for clarity/audit.)
+unstract/**/.env
+unstract/**/.env.*
+deployments/.env
+.env
+*.env.local
+
+# API keys
+*.key
+client/.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS / editor
+Thumbs.db
+.DS_Store
+.idea/
+.vscode/
