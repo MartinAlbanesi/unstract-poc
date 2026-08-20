@@ -1,0 +1,24 @@
+{
+  "nro": "OOO1-OOOO4S67",
+  "emisor": {
+    "razon_social": "Transp0rtes  del  L1toral  S.A .",
+    "cuit": "3O-71Z34567-8"
+  },
+  "destinatario": {
+    "nombre": "Ac0pi0  San  Mart1n  S.A .",
+    "domicilio": "Ruta  9  Km  Z1O",
+    "localidad": "San  Mart1n",
+    "cuit": "3O-7O9876S4-3",
+    "condicion_iva": "Resp0nsab|e  lnscr1pto"
+  },
+  "transportista": {
+    "nombre": "Juan  P4rez",
+    "pat_chasis": "AB1Z3CD",
+    "pat_acoplado": "ZY987XW",
+    "chofer": "Juan  P4rez"
+  },
+  "detalle": [
+    {"cantidad": 30.0, "descripcion": "B0|sas de  sem1||a  de  s0ja"}
+  ],
+  "aclaracion": "Entr3ga  en  h0rari0  de  dep0sit0"
+}

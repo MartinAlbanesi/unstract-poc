@@ -1,0 +1,24 @@
+{
+  "nro": "0001-00004567",
+  "emisor": {
+    "razon_social": "Transportes del Litoral S.A.",
+    "cuit": "30-71234567-8"
+  },
+  "destinatario": {
+    "nombre": "Acopio San Martin S.A.",
+    "domicilio": "Ruta 9 Km 210",
+    "localidad": "San Martin",
+    "cuit": "30-70987654-3",
+    "condicion_iva": "Responsable Inscripto"
+  },
+  "transportista": {
+    "nombre": "Juan Perez",
+    "pat_chasis": "AB123CD",
+    "pat_acoplado": "ZY987XW",
+    "chofer": "Juan Perez"
+  },
+  "detalle": [
+    {"cantidad": 30.0, "descripcion": "Bolsas de semilla de soja"}
+  ],
+  "aclaracion": "Entrega en horario de deposito"
+}
