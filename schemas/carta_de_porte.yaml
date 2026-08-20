@@ -1,0 +1,55 @@
+# Schema: Carta de Porte Electrónica (Argentine electronic grain waybill)
+# Source of truth for field-level validation (see client/validate.py, Phase 3).
+# Format: field: type
+#   - Nested objects are mappings of field: type
+#   - Repeating groups are sequences (list) with a single item schema
+#   - Allowed types: str, float, int, list
+document_type: carta_de_porte
+
+fields:
+  fecha: str
+  nro: str          # CTG number, e.g. 00000-00000992
+  vencimiento: str
+
+  # Section A: intervinientes (parties involved)
+  seccion_a:
+    titular: str
+    remitente_comercial: str
+    destinatario: str
+    destino: str
+    transportista: str
+    flete_pagador: str
+    chofer: str
+
+  # Section B: grano/especie (grain/species and weights)
+  seccion_b:
+    grano: str
+    tipo: str
+    campaña: str
+    peso_bruto: float
+    peso_tara: float
+    peso_neto: float
+
+  # Section C: procedencia (origin)
+  seccion_c:
+    planta: str
+    direccion: str
+    localidad: str
+    provincia: str
+    lat: float
+    long: float
+
+  # Section D: destino de la mercadería
+  seccion_d:
+    destino_mercaderia: str
+
+  # Section E: transporte
+  seccion_e:
+    patentes: str
+    partida: str
+    kms: float
+    tarifa: float
+
+  # Section G: descarga
+  seccion_g:
+    descarga: str

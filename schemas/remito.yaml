@@ -1,0 +1,35 @@
+# Schema: Remito (Argentine delivery note)
+# Source of truth for field-level validation (see client/validate.py, Phase 3).
+# Format: field: type
+#   - Nested objects are mappings of field: type
+#   - Repeating groups are sequences (list) with a single item schema
+#   - Allowed types: str, float, int, list
+document_type: remito
+
+fields:
+  nro: str
+
+  emisor:
+    razon_social: str
+    cuit: str
+
+  destinatario:
+    nombre: str
+    domicilio: str
+    localidad: str
+    cuit: str
+    condicion_iva: str
+
+  transportista:
+    nombre: str
+    pat_chasis: str
+    pat_acoplado: str
+    chofer: str
+
+  detalle:
+    type: list
+    item:
+      cantidad: float
+      descripcion: str
+
+  aclaracion: str
