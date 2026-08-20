@@ -10,6 +10,10 @@
 # (e.g. 8085) remain published alongside the remapped ones.
 
 services:
+  # frontend's remapped port (3100) is a debug/asset-only escape hatch: it
+  # bypasses Traefik, so /api/v1, /deployment, /public never reach the
+  # backend through it and login fails there. Use http://frontend.unstract.localhost
+  # (port 80, via Traefik) for actual platform use - see README.
   frontend:
     ports: !override
       - "3100:80"

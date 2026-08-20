@@ -27,7 +27,13 @@ reproduced by cloning — it never enters this repo's git history.
 .\healthcheck.ps1 -Wait 600   # poll until healthy (first boot can take a while)
 ```
 
-Then visit `http://localhost:3100` (login: `unstract` / `unstract`).
+Then visit `http://frontend.unstract.localhost` (login: `unstract` / `unstract`).
+Use this hostname, not the remapped `localhost:3100` — the app is served
+through Traefik, which routes `/api/v1`, `/deployment`, and `/public` to the
+backend under the same host; hitting the frontend container's own port
+directly skips that routing and login/API calls 404. Modern browsers (and
+this host's resolver) resolve `*.localhost` to loopback natively — no hosts
+file entry needed.
 
 Safe to re-run `bootstrap.ps1` at any time — every step is guarded and a
 rerun on an already-running platform is a no-op.

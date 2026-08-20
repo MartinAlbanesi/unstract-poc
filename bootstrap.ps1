@@ -238,10 +238,13 @@ function Run-Compose {
         Remove-Item Env:VERSION -ErrorAction SilentlyContinue
     }
     Log ""
-    # *.unstract.localhost hostnames don't resolve via plain DNS on Windows
-    # (only via systemd-resolved on Linux hosts) - our docker-compose.override.yaml
-    # remaps frontend to host port 3100, so that's the address that actually works here.
-    Log "Services are starting. Visit http://localhost:3100 once ready." -color Green
+    # *.unstract.localhost resolves to loopback natively here (and in modern
+    # browsers) - no hosts file entry needed. Use this hostname, not the
+    # frontend's remapped port (3100): the app is served through Traefik,
+    # which routes /api/v1, /deployment, /public to the backend under the
+    # same host, so hitting the frontend container's own port directly skips
+    # that routing and login/API calls 404.
+    Log "Services are starting. Visit http://frontend.unstract.localhost once ready." -color Green
     Log "Login: unstract / unstract"
     Log "Monitor: .\healthcheck.ps1"
 }

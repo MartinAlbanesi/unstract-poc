@@ -25,10 +25,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Windows: the *.unstract.localhost names resolve via systemd-resolved on Linux
-# but NOT on Windows, and our docker-compose.override.yaml remaps the host ports
-# (frontend 3100, backend 8100). Probe the remapped host ports directly.
-$frontendUrl = "http://localhost:3100"
+# *.unstract.localhost resolves to loopback natively on this host's resolver
+# and in modern browsers (no hosts file entry needed) - no reason to avoid it.
+# Frontend MUST be probed via this Traefik-routed hostname: hitting the
+# frontend container's own remapped port (3100) bypasses Traefik's routing
+# of /api/v1, /deployment, /public to the backend, so login/API calls 404
+# even though the bare page still returns 200 (this check would false-pass).
+# Backend /health doesn't need that routing, so the direct remapped port
+# (8100) is fine for it.
+$frontendUrl = "http://frontend.unstract.localhost"
 $backendHealthUrl = "http://localhost:8100/health"
 
 # Core services BOOT-2 requires to "report up" (spec scenario), checked by
