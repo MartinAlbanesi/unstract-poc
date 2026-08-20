@@ -199,7 +199,9 @@ function Setup-Env {
     if ($firstSetup) {
         Log ""
         Log "###################### BACKUP ENCRYPTION KEY ######################" -color Yellow
-        Log "ENCRYPTION_KEY = $encryptionKey" -color Yellow
+        Log "Copy the value of ENCRYPTION_KEY from either of these files to a secure location:" -color Yellow
+        Log "  - $(Join-Path $upstreamDir 'backend\.env')" -color Yellow
+        Log "  - $(Join-Path $upstreamDir 'platform-service\.env')" -color Yellow
         Log "Store it somewhere safe. Losing it makes existing adapter credentials unreadable." -color Yellow
         Log "###################################################################" -color Yellow
     }
