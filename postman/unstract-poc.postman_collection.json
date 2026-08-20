@@ -1,0 +1,313 @@
+{
+  "info": {
+    "name": "Unstract POC - Extraction APIs",
+    "description": "Endpoints for the 3 deployed Prompt Studio extraction APIs (factura, remito, carta de porte). Async flow: POST submits a document and returns an execution_id; GET polls that id until status is COMPLETED (or ERROR/STOPPED). The sync deployment API is deprecated - do not use it.\n\nSee docs/integration-guide.md and deployments/deployment-config.md in the repo for the full contract.\n\nSetup: import the companion environment (unstract-poc.postman_environment.json), then fill in factura_api_key / remito_api_key / carta_de_porte_api_key from your local deployments/.env (never commit real key values into this collection or environment file).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://frontend.unstract.localhost", "type": "string" },
+    { "key": "org", "value": "mock_org", "type": "string" },
+    { "key": "factura_execution_id", "value": "", "type": "string" },
+    { "key": "remito_execution_id", "value": "", "type": "string" },
+    { "key": "carta_de_porte_execution_id", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Factura",
+      "item": [
+        {
+          "name": "1. Submit Factura",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{factura_api_key}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "files", "type": "file", "src": [] },
+                { "key": "timeout", "value": "300", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/deployment/api/{{org}}/factura/",
+              "host": ["{{base_url}}"],
+              "path": ["deployment", "api", "{{org}}", "factura", ""]
+            },
+            "description": "Multipart POST. Set the 'files' field to a sample PDF (e.g. Documentos/Demo OCR 1/.../Factura_C_1.pdf). Response body: {\"message\": {\"execution_id\": \"...\", \"execution_status\": \"...\", \"status_api\": \"...\"}}. The test script below saves execution_id into the factura_execution_id collection variable for the Poll request."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 2xx', function () {",
+                  "    pm.response.to.be.success;",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('response has message.execution_id', function () {",
+                  "    pm.expect(body.message).to.be.an('object');",
+                  "    pm.expect(body.message.execution_id).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "if (body.message && body.message.execution_id) {",
+                  "    pm.collectionVariables.set('factura_execution_id', body.message.execution_id);",
+                  "    console.log('Saved factura_execution_id =', body.message.execution_id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Poll Factura Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{factura_api_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/deployment/api/{{org}}/factura/?execution_id={{factura_execution_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["deployment", "api", "{{org}}", "factura", ""],
+              "query": [
+                { "key": "execution_id", "value": "{{factura_execution_id}}" }
+              ]
+            },
+            "description": "Poll until 'status' is COMPLETED (then 'message' is a list with the extracted JSON per file), or ERROR/STOPPED (failure - check 'message' for details). Statuses PENDING/EXECUTING mean keep polling (re-send this request every few seconds, or use Postman's Runner/Collection Runner with a delay)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 2xx or 422 (still processing)', function () {",
+                  "    pm.expect([200, 201, 422]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "console.log('status =', body.status);",
+                  "",
+                  "if (body.status === 'COMPLETED') {",
+                  "    pm.test('completed execution returned a non-empty message list', function () {",
+                  "        pm.expect(body.message).to.be.an('array').and.not.empty;",
+                  "    });",
+                  "}",
+                  "",
+                  "if (body.status === 'ERROR' || body.status === 'STOPPED') {",
+                  "    pm.test('execution did not fail', function () {",
+                  "        pm.expect.fail('Execution ended with status ' + body.status + ': ' + JSON.stringify(body.message));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Remito",
+      "item": [
+        {
+          "name": "1. Submit Remito",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{remito_api_key}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "files", "type": "file", "src": [] },
+                { "key": "timeout", "value": "300", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/deployment/api/{{org}}/remito/",
+              "host": ["{{base_url}}"],
+              "path": ["deployment", "api", "{{org}}", "remito", ""]
+            },
+            "description": "Multipart POST. Set the 'files' field to a scanned remito PDF/image from Documentos/. Same response shape as Factura's submit."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 2xx', function () {",
+                  "    pm.response.to.be.success;",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('response has message.execution_id', function () {",
+                  "    pm.expect(body.message).to.be.an('object');",
+                  "    pm.expect(body.message.execution_id).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "if (body.message && body.message.execution_id) {",
+                  "    pm.collectionVariables.set('remito_execution_id', body.message.execution_id);",
+                  "    console.log('Saved remito_execution_id =', body.message.execution_id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Poll Remito Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{remito_api_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/deployment/api/{{org}}/remito/?execution_id={{remito_execution_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["deployment", "api", "{{org}}", "remito", ""],
+              "query": [
+                { "key": "execution_id", "value": "{{remito_execution_id}}" }
+              ]
+            },
+            "description": "Poll until 'status' is COMPLETED, ERROR, or STOPPED."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 2xx or 422 (still processing)', function () {",
+                  "    pm.expect([200, 201, 422]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "console.log('status =', body.status);",
+                  "",
+                  "if (body.status === 'COMPLETED') {",
+                  "    pm.test('completed execution returned a non-empty message list', function () {",
+                  "        pm.expect(body.message).to.be.an('array').and.not.empty;",
+                  "    });",
+                  "}",
+                  "",
+                  "if (body.status === 'ERROR' || body.status === 'STOPPED') {",
+                  "    pm.test('execution did not fail', function () {",
+                  "        pm.expect.fail('Execution ended with status ' + body.status + ': ' + JSON.stringify(body.message));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Carta de Porte",
+      "item": [
+        {
+          "name": "1. Submit Carta de Porte",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{carta_de_porte_api_key}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "files", "type": "file", "src": [] },
+                { "key": "timeout", "value": "300", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/deployment/api/{{org}}/carta-porte/",
+              "host": ["{{base_url}}"],
+              "path": ["deployment", "api", "{{org}}", "carta-porte", ""]
+            },
+            "description": "Multipart POST. Set the 'files' field to a scanned carta de porte PDF/image from Documentos/. Same response shape as Factura's submit. Note the API name is 'carta-porte' (hyphen), unlike the schema/env-var name 'carta_de_porte' (underscore) - see deployments/deployment-config.md."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 2xx', function () {",
+                  "    pm.response.to.be.success;",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('response has message.execution_id', function () {",
+                  "    pm.expect(body.message).to.be.an('object');",
+                  "    pm.expect(body.message.execution_id).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "if (body.message && body.message.execution_id) {",
+                  "    pm.collectionVariables.set('carta_de_porte_execution_id', body.message.execution_id);",
+                  "    console.log('Saved carta_de_porte_execution_id =', body.message.execution_id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Poll Carta de Porte Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{carta_de_porte_api_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/deployment/api/{{org}}/carta-porte/?execution_id={{carta_de_porte_execution_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["deployment", "api", "{{org}}", "carta-porte", ""],
+              "query": [
+                { "key": "execution_id", "value": "{{carta_de_porte_execution_id}}" }
+              ]
+            },
+            "description": "Poll until 'status' is COMPLETED, ERROR, or STOPPED."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 2xx or 422 (still processing)', function () {",
+                  "    pm.expect([200, 201, 422]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "console.log('status =', body.status);",
+                  "",
+                  "if (body.status === 'COMPLETED') {",
+                  "    pm.test('completed execution returned a non-empty message list', function () {",
+                  "        pm.expect(body.message).to.be.an('array').and.not.empty;",
+                  "    });",
+                  "}",
+                  "",
+                  "if (body.status === 'ERROR' || body.status === 'STOPPED') {",
+                  "    pm.test('execution did not fail', function () {",
+                  "        pm.expect.fail('Execution ended with status ' + body.status + ': ' + JSON.stringify(body.message));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
