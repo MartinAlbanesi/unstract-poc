@@ -138,7 +138,13 @@ function Setup-Env {
             $firstSetup = $true
             Copy-Item -LiteralPath $sample -Destination $envPath
             Log "Created .env for $svc"
-            if ($svc -eq "backend" -or $svc -eq "platform-service") {
+            if ($svc -eq "backend" -or $svc -eq "platform-service" -or $svc -eq "workers") {
+                # workers/sample.env ships with no ENCRYPTION_KEY line at all (unlike
+                # backend/platform-service, which default to a placeholder). Without
+                # this, Celery workers hold an empty key and any adapter-credential
+                # decrypt they perform (e.g. LLM/embedding calls during extraction)
+                # raises InvalidEncryptionKey even though backend and platform-service
+                # agree with each other - upstream run-platform.sh has the same gap.
                 Set-EnvValue -file $envPath -key "ENCRYPTION_KEY" -value $encryptionKey
                 Log "  -> injected ENCRYPTION_KEY"
             }
