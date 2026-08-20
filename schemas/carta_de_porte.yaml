@@ -4,15 +4,19 @@
 #   - Nested objects are mappings of field: type
 #   - Repeating groups are sequences (list) with a single item schema
 #   - Allowed types: str, float, int, list
+#
+# Field names here match the actual Prompt Studio extraction prompt deployed
+# in `carta-porte-poc` (see deployments/carta-porte-poc.json /
+# deployments/deployment-config.md) - not a generic naming convention.
 document_type: carta_de_porte
 
 fields:
   fecha: str
-  nro: str          # CTG number, e.g. 00000-00000992
+  nro_ctg: str          # CTG number, e.g. 00000-00000992
   vencimiento: str
 
   # Section A: intervinientes (parties involved)
-  seccion_a:
+  seccion_a_intervinientes:
     titular: str
     remitente_comercial: str
     destinatario: str
@@ -22,7 +26,7 @@ fields:
     chofer: str
 
   # Section B: grano/especie (grain/species and weights)
-  seccion_b:
+  seccion_b_grano_especie:
     grano: str
     tipo: str
     campaña: str
@@ -31,25 +35,23 @@ fields:
     peso_neto: float
 
   # Section C: procedencia (origin)
-  seccion_c:
+  seccion_c_procedencia:
     planta: str
     direccion: str
     localidad: str
     provincia: str
-    lat: float
-    long: float
+    lat: str
+    long: str
 
-  # Section D: destino de la mercadería
-  seccion_d:
-    destino_mercaderia: str
+  # Section D: destino de la mercadería (flat string, not a nested section)
+  seccion_d_destino_mercaderia: str
 
   # Section E: transporte
-  seccion_e:
+  seccion_e_transporte:
     patentes: str
     partida: str
     kms: float
     tarifa: float
 
-  # Section G: descarga
-  seccion_g:
-    descarga: str
+  # Section G: descarga (flat string, not a nested section)
+  seccion_g_descarga: str
