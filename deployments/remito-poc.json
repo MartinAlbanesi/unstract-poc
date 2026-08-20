@@ -1,0 +1,55 @@
+{
+  "tool_metadata": {
+    "tool_name": "remito-poc",
+    "description": "Remito para OCR Rentax",
+    "author": "Martin Albanesi",
+    "icon": ""
+  },
+  "tool_settings": {
+    "preamble": "Your ability to extract and summarize this context accurately is essential for effective analysis. Pay close attention to the context's language, structure, and any cross-references to ensure a comprehensive and precise extraction of information. Do not use prior knowledge or information from outside the context to answer the questions. Only use the information provided in the context to answer the questions.",
+    "postamble": "Do not include any explanation in the reply. Only include the extracted information in the reply.",
+    "summarize_prompt": "",
+    "summarize_context": false,
+    "summarize_as_source": false,
+    "enable_challenge": false,
+    "enable_highlight": false,
+    "exclude_failed": true,
+    "single_pass_extraction_mode": false,
+    "prompt_grammer": null
+  },
+  "default_profile_settings": {
+    "chunk_size": 0,
+    "chunk_overlap": 0,
+    "retrieval_strategy": "simple",
+    "similarity_top_k": 3,
+    "section": "Default",
+    "profile_name": "Default Profile"
+  },
+  "prompts": [
+    {
+      "prompt_key": "remito-json",
+      "prompt": "Extract the following fields from this Argentine remito (delivery note)\nand return ONLY a valid JSON object with this exact structure, no extra\ntext:\n\n{\n  \"nro\": \"\",\n  \"emisor\": {\n    \"razon_social\": \"\",\n    \"cuit\": \"\"\n  },\n  \"destinatario\": {\n    \"nombre\": \"\",\n    \"domicilio\": \"\",\n    \"localidad\": \"\",\n    \"cuit\": \"\",\n    \"condicion_iva\": \"\"\n  },\n  \"transportista\": {\n    \"nombre\": \"\",\n    \"pat_chasis\": \"\",\n    \"pat_acoplado\": \"\",\n    \"chofer\": \"\"\n  },\n  \"detalle\": [\n    {\n      \"cantidad\": 0,\n      \"descripcion\": \"\"\n    }\n  ],\n  \"aclaracion\": \"\"\n}\n\nThis document may be a scanned image with OCR noise - do your best to read it. \"nro\" typically follows the format PV-NNNNN (e.g. 0006-00002179).\nIf a field is not present or illegible, use an empty string (or 0 for numeric fields). \"detalle\" must contain one object per line item.",
+      "active": true,
+      "required": null,
+      "enforce_type": "text",
+      "sequence_number": 1,
+      "prompt_type": "PROMPT",
+      "assert_prompt": null,
+      "assertion_failure_prompt": null,
+      "is_assert": false,
+      "evaluate": true,
+      "eval_quality_faithfulness": true,
+      "eval_quality_correctness": true,
+      "eval_quality_relevance": true,
+      "eval_security_pii": true,
+      "eval_guidance_toxicity": true,
+      "eval_guidance_completeness": true,
+      "enable_postprocessing_webhook": false,
+      "postprocessing_webhook_url": null
+    }
+  ],
+  "export_metadata": {
+    "exported_at": "2026-08-20T14:26:29.351751+00:00",
+    "tool_id": "383f8369-c022-4653-8a8b-e0d98173aced"
+  }
+}

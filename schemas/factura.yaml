@@ -1,0 +1,41 @@
+# Schema: Factura (Argentine invoice — types A/B/C/E/M)
+# Source of truth for field-level validation (see client/validate.py, Phase 3).
+# Format: field: type
+#   - Nested objects are mappings of field: type
+#   - Repeating groups are sequences (list) with a single item schema
+#   - Allowed types: str, float, int, list
+document_type: factura
+
+fields:
+  fecha_emision: str
+  punto_venta: str
+  comp_nro: str
+
+  emisor:
+    razon_social: str
+    cuit: str
+    condicion_iva: str
+    domicilio: str
+
+  receptor:
+    nombre: str
+    cuit: str
+    domicilio: str
+
+  condicion_venta: str
+
+  detalle:
+    type: list
+    item:
+      codigo: str
+      producto: str
+      cantidad: float
+      u_medida: str
+      precio_unit: float
+      bonif: float
+      subtotal: float
+
+  subtotal: float
+  total: float
+  CAE: str
+  fecha_vto_cae: str
