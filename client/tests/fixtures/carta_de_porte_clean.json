@@ -1,0 +1,42 @@
+{
+  "fecha": "2026-03-26",
+  "nro": "00000-00000992",
+  "vencimiento": "2026-03-28",
+  "seccion_a": {
+    "titular": "Agropecuaria del Centro S.A.",
+    "remitente_comercial": "Agropecuaria del Centro S.A.",
+    "destinatario": "Molino Buen Trigo S.R.L.",
+    "destino": "Planta Molino Buen Trigo",
+    "transportista": "Transportes Rapidos S.A.",
+    "flete_pagador": "Destinatario",
+    "chofer": "Carlos Gomez"
+  },
+  "seccion_b": {
+    "grano": "Soja",
+    "tipo": "1",
+    "campaña": "2025/2026",
+    "peso_bruto": 32000.0,
+    "peso_tara": 14000.0,
+    "peso_neto": 18000.0
+  },
+  "seccion_c": {
+    "planta": "Campo La Esperanza",
+    "direccion": "Ruta 7 Km 55",
+    "localidad": "Pergamino",
+    "provincia": "Buenos Aires",
+    "lat": -33.89,
+    "long": -60.57
+  },
+  "seccion_d": {
+    "destino_mercaderia": "Molienda"
+  },
+  "seccion_e": {
+    "patentes": "AB123CD",
+    "partida": "12345",
+    "kms": 180.0,
+    "tarifa": 3500.0
+  },
+  "seccion_g": {
+    "descarga": "Playa 3, turno tarde"
+  }
+}

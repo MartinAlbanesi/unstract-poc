@@ -1,0 +1,42 @@
+{
+  "fecha": "Z6/O3/2O26",
+  "nro": "OOOOO-OOOOO992",
+  "vencimiento": "Z8/O3/2O26",
+  "seccion_a": {
+    "titular": "Agr0pecuaria  del  Centr0  S.A .",
+    "remitente_comercial": "Agr0pecuaria  del  Centr0  S.A .",
+    "destinatario": "M0lin0  Buen  Trig0  S.R.L .",
+    "destino": "P|anta  M0lin0  Buen  Trig0",
+    "transportista": "Transp0rtes  R4pid0s  S.A .",
+    "flete_pagador": "Destinatari0",
+    "chofer": "Car|0s  G0mez"
+  },
+  "seccion_b": {
+    "grano": "S0ja",
+    "tipo": "1",
+    "campaña": "ZOZ5/ZOZ6",
+    "peso_bruto": 32000.0,
+    "peso_tara": 14000.0,
+    "peso_neto": 18000.0
+  },
+  "seccion_c": {
+    "planta": "Camp0  La  Esperanza",
+    "direccion": "Ruta  7  Km  SS",
+    "localidad": "Pergamin0",
+    "provincia": "Buen0s  Aires",
+    "lat": -33.89,
+    "long": -60.57
+  },
+  "seccion_d": {
+    "destino_mercaderia": "M0lienda"
+  },
+  "seccion_e": {
+    "patentes": "AB1Z3CD",
+    "partida": "1Z345",
+    "kms": 180.0,
+    "tarifa": 3500.0
+  },
+  "seccion_g": {
+    "descarga": "P|aya  3,  turn0  tarde"
+  }
+}
