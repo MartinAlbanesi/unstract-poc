@@ -1,4 +1,5 @@
 {
+  "fecha": "Z0Z6O3Z6",
   "nro": "OOO1-OOOO4S67",
   "emisor": {
     "razon_social": "Transp0rtes  del  L1toral  S.A .",
@@ -20,5 +21,8 @@
   "detalle": [
     {"cantidad": 30.0, "descripcion": "B0|sas de  sem1||a  de  s0ja"}
   ],
-  "aclaracion": "Entr3ga  en  h0rari0  de  dep0sit0"
+  "aclaracion": "Entr3ga  en  h0rari0  de  dep0sit0",
+  "tipo_autorizacion": "CA|",
+  "nro_autorizacion": "514442l5629l9Z",
+  "fecha_vto_cae": "Z0Z61l04"
 }

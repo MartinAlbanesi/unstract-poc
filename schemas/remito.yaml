@@ -7,6 +7,7 @@
 document_type: remito
 
 fields:
+  fecha: str
   nro: str
 
   emisor:
@@ -33,3 +34,6 @@ fields:
       descripcion: str
 
   aclaracion: str
+  tipo_autorizacion: str
+  nro_autorizacion: str
+  fecha_vto_cae: str

@@ -1,4 +1,5 @@
 {
+  "fecha": "20260326",
   "nro": "0001-00004567",
   "emisor": {
     "razon_social": "Transportes del Litoral S.A.",
@@ -20,5 +21,8 @@
   "detalle": [
     {"cantidad": 30.0, "descripcion": "Bolsas de semilla de soja"}
   ],
-  "aclaracion": "Entrega en horario de deposito"
+  "aclaracion": "Entrega en horario de deposito",
+  "tipo_autorizacion": "CAI",
+  "nro_autorizacion": "51444215629192",
+  "fecha_vto_cae": "20261104"
 }
