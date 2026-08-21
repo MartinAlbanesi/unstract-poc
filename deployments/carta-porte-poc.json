@@ -1,0 +1,55 @@
+{
+  "tool_metadata": {
+    "tool_name": "carta-porte-poc",
+    "description": "Carta Porte OCR Rentax",
+    "author": "Martin Albanesi",
+    "icon": ""
+  },
+  "tool_settings": {
+    "preamble": "Your ability to extract and summarize this context accurately is essential for effective analysis. Pay close attention to the context's language, structure, and any cross-references to ensure a comprehensive and precise extraction of information. Do not use prior knowledge or information from outside the context to answer the questions. Only use the information provided in the context to answer the questions.",
+    "postamble": "Do not include any explanation in the reply. Only include the extracted information in the reply.",
+    "summarize_prompt": "",
+    "summarize_context": false,
+    "summarize_as_source": false,
+    "enable_challenge": false,
+    "enable_highlight": false,
+    "exclude_failed": true,
+    "single_pass_extraction_mode": false,
+    "prompt_grammer": null
+  },
+  "default_profile_settings": {
+    "chunk_size": 0,
+    "chunk_overlap": 0,
+    "retrieval_strategy": "simple",
+    "similarity_top_k": 3,
+    "section": "Default",
+    "profile_name": "Default Profile"
+  },
+  "prompts": [
+    {
+      "prompt_key": "carta-porte-json",
+      "prompt": "Extract the following fields from this Argentine Carta de Porte\nElectr\u00f3nica (electronic grain waybill) and return ONLY a valid JSON\nobject with this exact structure, no extra text:\n\n{\n  \"fecha\": \"\",\n  \"nro_ctg\": \"\",\n  \"vencimiento\": \"\",\n  \"seccion_a_intervinientes\": {\n    \"titular\": \"\",\n    \"remitente_comercial\": \"\",\n    \"destinatario\": \"\",\n    \"destino\": \"\",\n    \"transportista\": \"\",\n    \"flete_pagador\": \"\",\n    \"chofer\": \"\"\n  },\n  \"seccion_b_grano_especie\": {\n    \"grano\": \"\",\n    \"tipo\": \"\",\n    \"campa\u00f1a\": \"\",\n    \"peso_bruto\": 0,\n    \"peso_tara\": 0,\n    \"peso_neto\": 0\n  },\n  \"seccion_c_procedencia\": {\n    \"planta\": \"\",\n    \"direccion\": \"\",\n    \"localidad\": \"\",\n    \"provincia\": \"\",\n    \"lat\": \"\",\n    \"long\": \"\"\n  },\n  \"seccion_d_destino_mercaderia\": \"\",\n  \"seccion_e_transporte\": {\n    \"patentes\": \"\",\n    \"partida\": \"\",\n    \"kms\": 0,\n    \"tarifa\": 0\n  },\n  \"seccion_g_descarga\": \"\"\n}\n\nThis document may be a scanned image with OCR noise - do your best to\nread it. \"nro_ctg\" typically follows the format NNNNN-NNNNNNN (CTG\nnumber). If a field is not present or illegible, use an empty string\n(or 0 for numeric fields).",
+      "active": true,
+      "required": null,
+      "enforce_type": "text",
+      "sequence_number": 1,
+      "prompt_type": "PROMPT",
+      "assert_prompt": null,
+      "assertion_failure_prompt": null,
+      "is_assert": false,
+      "evaluate": true,
+      "eval_quality_faithfulness": true,
+      "eval_quality_correctness": true,
+      "eval_quality_relevance": true,
+      "eval_security_pii": true,
+      "eval_guidance_toxicity": true,
+      "eval_guidance_completeness": true,
+      "enable_postprocessing_webhook": false,
+      "postprocessing_webhook_url": null
+    }
+  ],
+  "export_metadata": {
+    "exported_at": "2026-08-20T14:27:20.823556+00:00",
+    "tool_id": "fe80ecbc-2d6c-4da0-a5d0-8d8d7f93ad5f"
+  }
+}

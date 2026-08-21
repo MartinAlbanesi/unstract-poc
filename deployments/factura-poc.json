@@ -1,0 +1,55 @@
+{
+  "tool_metadata": {
+    "tool_name": "factura-poc",
+    "description": "POC para testear OCR con Unstract",
+    "author": "Martin Albanesi",
+    "icon": ""
+  },
+  "tool_settings": {
+    "preamble": "Your ability to extract and summarize this context accurately is essential for effective analysis. Pay close attention to the context's language, structure, and any cross-references to ensure a comprehensive and precise extraction of information. Do not use prior knowledge or information from outside the context to answer the questions. Only use the information provided in the context to answer the questions.",
+    "postamble": "Do not include any explanation in the reply. Only include the extracted information in the reply.",
+    "summarize_prompt": "",
+    "summarize_context": false,
+    "summarize_as_source": false,
+    "enable_challenge": false,
+    "enable_highlight": false,
+    "exclude_failed": true,
+    "single_pass_extraction_mode": false,
+    "prompt_grammer": null
+  },
+  "default_profile_settings": {
+    "chunk_size": 0,
+    "chunk_overlap": 0,
+    "retrieval_strategy": "simple",
+    "similarity_top_k": 3,
+    "section": "Default",
+    "profile_name": "Default Profile"
+  },
+  "prompts": [
+    {
+      "prompt_key": "factura-json",
+      "prompt": "Extract the following fields from this Argentine invoice (factura) and\nreturn ONLY a valid JSON object with this exact structure, no extra text:\n\n{\n  \"fecha_emision\": \"\",\n  \"punto_venta\": \"\",\n  \"comp_nro\": \"\",\n  \"emisor\": {\n    \"razon_social\": \"\",\n    \"cuit\": \"\",\n    \"condicion_iva\": \"\",\n    \"domicilio\": \"\"\n  },\n  \"receptor\": {\n    \"nombre\": \"\",\n    \"cuit\": \"\",\n    \"domicilio\": \"\"\n  },\n  \"condicion_venta\": \"\",\n  \"detalle\": [\n    {\n      \"codigo\": \"\",\n      \"producto\": \"\",\n      \"cantidad\": 0,\n      \"u_medida\": \"\",\n      \"precio_unit\": 0,\n      \"bonif\": 0,\n      \"subtotal\": 0\n    }\n  ],\n  \"subtotal\": 0,\n  \"total\": 0,\n  \"CAE\": \"\",\n  \"fecha_vto_cae\": \"\"\n}\n\nIf a field is not present in the document, use an empty string (or 0 for\nnumeric fields). Numeric fields must be numbers, not strings. \"detalle\"\nmust contain one object per line item found in the invoice table.",
+      "active": true,
+      "required": null,
+      "enforce_type": "text",
+      "sequence_number": 1,
+      "prompt_type": "PROMPT",
+      "assert_prompt": null,
+      "assertion_failure_prompt": null,
+      "is_assert": false,
+      "evaluate": true,
+      "eval_quality_faithfulness": true,
+      "eval_quality_correctness": true,
+      "eval_quality_relevance": true,
+      "eval_security_pii": true,
+      "eval_guidance_toxicity": true,
+      "eval_guidance_completeness": true,
+      "enable_postprocessing_webhook": false,
+      "postprocessing_webhook_url": null
+    }
+  ],
+  "export_metadata": {
+    "exported_at": "2026-08-20T14:24:58.465465+00:00",
+    "tool_id": "ad5d9102-fe95-48d0-840e-3f4b27f0f35b"
+  }
+}

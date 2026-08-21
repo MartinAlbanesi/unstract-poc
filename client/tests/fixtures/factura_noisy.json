@@ -1,0 +1,32 @@
+{
+  "fecha_emision": "2S/O3/2O26",
+  "punto_venta": "OOO1",
+  "comp_nro": "OOOO123-4",
+  "emisor": {
+    "razon_social": "D1str1buid0ra del  Sur   S.A .",
+    "cuit": "3O-71Z34567-8",
+    "condicion_iva": "Responsable  lnscripto",
+    "domicilio": "Av . Siempreviva 74Z, CAB A"
+  },
+  "receptor": {
+    "nombre": "C0merc1al  Norte  S.R.L .",
+    "cuit": "3O-7O9876S4-3",
+    "domicilio": "Ca||e Fa|sa 1Z3, Ros4rio"
+  },
+  "condicion_venta": "Cta.  Cte .",
+  "detalle": [
+    {
+      "codigo": "SKU-OO1",
+      "producto": "Torn1ll0 3/8",
+      "cantidad": 100.0,
+      "u_medida": "un1dad",
+      "precio_unit": 12.5,
+      "bonif": 0.0,
+      "subtotal": 1250.0
+    }
+  ],
+  "subtotal": 1250.0,
+  "total": 1512.5,
+  "CAE": "7S312468901Z34",
+  "fecha_vto_cae": "OS/O4/2O26"
+}

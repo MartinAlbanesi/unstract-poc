@@ -1,0 +1,32 @@
+{
+  "fecha_emision": "2026-03-26",
+  "punto_venta": "0001",
+  "comp_nro": "00001234",
+  "emisor": {
+    "razon_social": "Distribuidora del Sur S.A.",
+    "cuit": "30-71234567-8",
+    "condicion_iva": "Responsable Inscripto",
+    "domicilio": "Av. Siempreviva 742, CABA"
+  },
+  "receptor": {
+    "nombre": "Comercial Norte S.R.L.",
+    "cuit": "30-70987654-3",
+    "domicilio": "Calle Falsa 123, Rosario"
+  },
+  "condicion_venta": "Cuenta Corriente",
+  "detalle": [
+    {
+      "codigo": "SKU-001",
+      "producto": "Tornillo 3/8",
+      "cantidad": 100.0,
+      "u_medida": "unidad",
+      "precio_unit": 12.5,
+      "bonif": 0.0,
+      "subtotal": 1250.0
+    }
+  ],
+  "subtotal": 1250.0,
+  "total": 1512.5,
+  "CAE": "75312468901234",
+  "fecha_vto_cae": "2026-04-05"
+}
