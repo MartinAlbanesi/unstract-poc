@@ -3,10 +3,13 @@
 
 Posts a document to one of the 3 deployed Prompt Studio APIs (factura,
 remito, carta_de_porte), polls the async execution until it finishes, and
-prints the extracted, typed JSON to stdout.
+prints the extracted, typed JSON to stdout. When --type is omitted, the
+document is first classified via the document-classifier deployment and
+routed to the matching extraction endpoint automatically.
 
 Usage:
     python client.py --type factura --file path/to/doc.pdf [--timeout 300]
+    python client.py --file path/to/doc.pdf  # auto-classify + extract
 
 Exit codes (CL-3):
     0  success — extracted JSON printed to stdout
@@ -46,6 +49,9 @@ _TYPE_CONFIG: dict[str, dict[str, str]] = {
     "factura": {"api_name": "factura", "env_prefix": "FACTURA"},
     "remito": {"api_name": "remito", "env_prefix": "REMITO"},
     "carta_de_porte": {"api_name": "carta-porte", "env_prefix": "CARTA_DE_PORTE"},
+    # Routing-only deployment: intentionally NOT in DOC_TYPES so
+    # run_extraction()'s type guard keeps rejecting it as an extraction type.
+    "classifier": {"api_name": "document-classifier", "env_prefix": "CLASSIFIER"},
 }
 
 
@@ -264,6 +270,33 @@ def _unwrap_prompt_studio_output(output: dict[str, Any]) -> dict[str, Any]:
     return output
 
 
+def _parse_classifier_output(output: dict[str, Any]) -> list[dict[str, Any]]:
+    """The classifier's single output field is 'document-classifier-json',
+    holding a JSON *array* string (routing envelopes), unlike the 3
+    extraction endpoints whose '<type>-json' field holds a JSON object.
+    `_unwrap_prompt_studio_output` only unwraps object shapes, so the
+    classifier's raw '-json' field passes through `extract_output`
+    untouched; this function does the array-specific unwrap/parse.
+    """
+    value = output.get("document-classifier-json")
+    if not isinstance(value, str):
+        raise ExtractionFailedError(
+            f"Expected 'document-classifier-json' string field in classifier output: {output!r}"
+        )
+    cleaned = _strip_markdown_json_fence(value)
+    try:
+        parsed = json.loads(cleaned)
+    except json.JSONDecodeError as exc:
+        raise ExtractionFailedError(
+            f"Could not parse embedded JSON in 'document-classifier-json': {exc}"
+        ) from exc
+    if not isinstance(parsed, list):
+        raise ExtractionFailedError(
+            f"Expected a JSON array from the classifier, got: {type(parsed).__name__}"
+        )
+    return parsed
+
+
 def extract_output(result: list[dict[str, Any]]) -> dict[str, Any]:
     """Pull the typed extraction JSON out of the first file's result."""
     first = result[0]
@@ -283,21 +316,17 @@ def extract_output(result: list[dict[str, Any]]) -> dict[str, Any]:
     return _unwrap_prompt_studio_output(output)
 
 
-def run_extraction(
+def _execute_pipeline(
     doc_type: str,
     file_path: str,
-    timeout: int = DEFAULT_TIMEOUT_SECONDS,
-    session: requests.Session | None = None,
-    env: dict[str, str] | None = None,
+    timeout: int,
+    session: requests.Session | None,
+    env: dict[str, str] | None,
 ) -> dict[str, Any]:
-    """Full flow: validate -> submit -> poll -> extract. Raises ClientError
-    subclasses on failure. Returns the extracted JSON dict on success.
+    """Shared submit -> poll -> extract flow for any deployment configured in
+    `_TYPE_CONFIG` (including "classifier", which is deliberately not a
+    member of DOC_TYPES — see run_extraction's type guard).
     """
-    if doc_type not in DOC_TYPES:
-        raise InvalidInputError(
-            f"Unknown --type '{doc_type}', expected one of {DOC_TYPES}"
-        )
-
     path = validate_input_file(file_path)
     config = load_config(doc_type, env=env)
     sess = session or requests.Session()
@@ -318,9 +347,76 @@ def run_extraction(
     return extract_output(result)
 
 
+def run_extraction(
+    doc_type: str,
+    file_path: str,
+    timeout: int = DEFAULT_TIMEOUT_SECONDS,
+    session: requests.Session | None = None,
+    env: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Full flow: validate -> submit -> poll -> extract. Raises ClientError
+    subclasses on failure. Returns the extracted JSON dict on success.
+    """
+    if doc_type not in DOC_TYPES:
+        raise InvalidInputError(
+            f"Unknown --type '{doc_type}', expected one of {DOC_TYPES}"
+        )
+    return _execute_pipeline(doc_type, file_path, timeout, session, env)
+
+
+def classify_document(
+    file_path: str,
+    timeout: int = DEFAULT_TIMEOUT_SECONDS,
+    session: requests.Session | None = None,
+    env: dict[str, str] | None = None,
+) -> str:
+    """Submit `file_path` to the classifier deployment and return the
+    `tipo_documento` of the FIRST comprobante with `documento_valido: true`
+    (multi-comprobante consolidation beyond that is out of scope — see the
+    spec's "Classifier returns multiple comprobantes" scenario). Raises
+    ExtractionFailedError if no comprobante is valid, or if the classified
+    `tipo_documento` is not one of DOC_TYPES.
+    """
+    output = _execute_pipeline("classifier", file_path, timeout, session, env)
+    envelopes = _parse_classifier_output(output)
+
+    for envelope in envelopes:
+        if envelope.get("documento_valido") is True:
+            tipo_documento = envelope.get("tipo_documento")
+            if tipo_documento in DOC_TYPES:
+                return tipo_documento
+            raise ExtractionFailedError(
+                f"Classifier returned unrecognized tipo_documento: {tipo_documento!r}"
+            )
+
+    raise ExtractionFailedError(
+        "Classifier found no valid comprobante (documento_valido: true) in the document"
+    )
+
+
+def run_auto(
+    file_path: str,
+    timeout: int = DEFAULT_TIMEOUT_SECONDS,
+    session: requests.Session | None = None,
+    env: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Classify `file_path`, then route it to the matching extraction
+    endpoint. Returns the extraction result (not the classifier's routing
+    envelope).
+    """
+    tipo_documento = classify_document(file_path, timeout=timeout, session=session, env=env)
+    return run_extraction(tipo_documento, file_path, timeout=timeout, session=session, env=env)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Unstract OSS extraction client")
-    parser.add_argument("--type", required=True, choices=DOC_TYPES, dest="doc_type")
+    parser.add_argument(
+        "--type",
+        choices=DOC_TYPES,
+        dest="doc_type",
+        default=None,
+        help="Document type; if omitted, the document is classified automatically",
+    )
     parser.add_argument("--file", required=True, help="Path to the input PDF")
     parser.add_argument(
         "--timeout",
@@ -331,7 +427,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        output = run_extraction(args.doc_type, args.file, timeout=args.timeout)
+        if args.doc_type:
+            output = run_extraction(args.doc_type, args.file, timeout=args.timeout)
+        else:
+            output = run_auto(args.file, timeout=args.timeout)
     except ClientError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return exc.exit_code

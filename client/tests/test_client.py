@@ -7,8 +7,11 @@ from client import (
     ApiConnectionError,
     ExtractionFailedError,
     InvalidInputError,
+    _parse_classifier_output,
+    classify_document,
     load_config,
     main,
+    run_auto,
     run_extraction,
     validate_input_file,
 )
@@ -22,9 +25,14 @@ ENV = {
     "REMITO_API_KEY": "test-remito-key",
     "CARTA_DE_PORTE_API_NAME": "carta-porte",
     "CARTA_DE_PORTE_API_KEY": "test-carta-key",
+    "CLASSIFIER_API_NAME": "document-classifier",
+    "CLASSIFIER_API_KEY": "test-classifier-key",
 }
 
 POST_URL = "http://frontend.unstract.localhost/deployment/api/mock_org/factura/"
+CLASSIFIER_POST_URL = (
+    "http://frontend.unstract.localhost/deployment/api/mock_org/document-classifier/"
+)
 
 
 @pytest.fixture
@@ -60,6 +68,36 @@ def _prompt_studio_wrapped_result_list(fenced: bool = False):
         {
             "file": "sample.pdf",
             "result": {"output": {"factura-json": value}},
+            "error": None,
+        }
+    ]
+
+
+def _classifier_envelopes(*overrides):
+    """Default single-envelope classifier response; pass dicts to override
+    or add entries, e.g. _classifier_envelopes({"documento_valido": False})."""
+    if not overrides:
+        overrides = ({},)
+    base = {
+        "pagina_origen": 1,
+        "documento_valido": True,
+        "region": [0.0, 0.0, 1.0, 1.0],
+        "tipo_documento": "factura",
+        "tipo_comprobante": "FACTURA A",
+        "observaciones": "",
+    }
+    return [{**base, **override} for override in overrides]
+
+
+def _classifier_completed_result_list(envelopes, fenced: bool = False):
+    """Mirrors the real classifier API shape: output =
+    {'document-classifier-json': '<JSON ARRAY string>'}."""
+    inner = json.dumps(envelopes)
+    value = f"```json\n{inner}\n```" if fenced else inner
+    return [
+        {
+            "file": "sample.pdf",
+            "result": {"output": {"document-classifier-json": value}},
             "error": None,
         }
     ]
@@ -256,6 +294,163 @@ def test_run_extraction_unknown_type_exits_1(sample_pdf):
         run_extraction("unknown_type", sample_pdf, env=ENV)
 
 
+def test_run_extraction_rejects_classifier_as_extraction_type(sample_pdf):
+    """"classifier" is routing-only and deliberately excluded from
+    DOC_TYPES; run_extraction must keep rejecting it."""
+    with pytest.raises(InvalidInputError):
+        run_extraction("classifier", sample_pdf, env=ENV)
+
+
+# --- _parse_classifier_output ----------------------------------------------
+
+
+def test_parse_classifier_output_parses_array_string():
+    envelopes = _classifier_envelopes()
+    output = {"document-classifier-json": json.dumps(envelopes)}
+    assert _parse_classifier_output(output) == envelopes
+
+
+def test_parse_classifier_output_strips_markdown_fence():
+    envelopes = _classifier_envelopes()
+    fenced = f"```json\n{json.dumps(envelopes)}\n```"
+    output = {"document-classifier-json": fenced}
+    assert _parse_classifier_output(output) == envelopes
+
+
+def test_parse_classifier_output_raises_on_invalid_json():
+    output = {"document-classifier-json": "{not valid json"}
+    with pytest.raises(ExtractionFailedError):
+        _parse_classifier_output(output)
+
+
+def test_parse_classifier_output_raises_on_non_array():
+    # A JSON object (not an array) is not a valid classifier response shape.
+    output = {"document-classifier-json": json.dumps({"tipo_documento": "factura"})}
+    with pytest.raises(ExtractionFailedError):
+        _parse_classifier_output(output)
+
+
+def test_parse_classifier_output_raises_on_missing_field():
+    with pytest.raises(ExtractionFailedError):
+        _parse_classifier_output({"some-other-json": "[]"})
+
+
+# --- classify_document -------------------------------------------------
+
+
+def test_classify_document_returns_first_valid_tipo_documento(requests_mock, sample_pdf):
+    envelopes = _classifier_envelopes(
+        {"documento_valido": False, "tipo_documento": None},
+        {"documento_valido": True, "tipo_documento": "remito", "tipo_comprobante": "REMITO"},
+    )
+    requests_mock.post(
+        CLASSIFIER_POST_URL,
+        json={
+            "message": {
+                "execution_id": "exec-classify-1",
+                "execution_status": "COMPLETED",
+                "result": _classifier_completed_result_list(envelopes),
+            }
+        },
+        status_code=200,
+    )
+    tipo_documento = classify_document(sample_pdf, env=ENV)
+    assert tipo_documento == "remito"
+
+
+def test_classify_document_raises_when_no_entry_valid(requests_mock, sample_pdf):
+    envelopes = _classifier_envelopes(
+        {"documento_valido": False, "tipo_documento": None, "observaciones": "fuera de alcance"}
+    )
+    requests_mock.post(
+        CLASSIFIER_POST_URL,
+        json={
+            "message": {
+                "execution_id": "exec-classify-2",
+                "execution_status": "COMPLETED",
+                "result": _classifier_completed_result_list(envelopes),
+            }
+        },
+        status_code=200,
+    )
+    with pytest.raises(ExtractionFailedError) as exc_info:
+        classify_document(sample_pdf, env=ENV)
+    assert exc_info.value.exit_code == 3
+
+
+def test_classify_document_raises_on_unrecognized_tipo_documento(requests_mock, sample_pdf):
+    envelopes = _classifier_envelopes(
+        {"documento_valido": True, "tipo_documento": "not_a_real_type"}
+    )
+    requests_mock.post(
+        CLASSIFIER_POST_URL,
+        json={
+            "message": {
+                "execution_id": "exec-classify-3",
+                "execution_status": "COMPLETED",
+                "result": _classifier_completed_result_list(envelopes),
+            }
+        },
+        status_code=200,
+    )
+    with pytest.raises(ExtractionFailedError) as exc_info:
+        classify_document(sample_pdf, env=ENV)
+    assert exc_info.value.exit_code == 3
+
+
+# --- run_auto -------------------------------------------------------------
+
+
+def test_run_auto_classifies_then_routes_to_matching_extraction(requests_mock, sample_pdf):
+    envelopes = _classifier_envelopes({"tipo_documento": "remito", "tipo_comprobante": "REMITO"})
+    requests_mock.post(
+        CLASSIFIER_POST_URL,
+        json={
+            "message": {
+                "execution_id": "exec-classify-4",
+                "execution_status": "COMPLETED",
+                "result": _classifier_completed_result_list(envelopes),
+            }
+        },
+        status_code=200,
+    )
+    remito_url = "http://frontend.unstract.localhost/deployment/api/mock_org/remito/"
+    requests_mock.post(
+        remito_url,
+        json={
+            "message": {
+                "execution_id": "exec-extract-1",
+                "execution_status": "COMPLETED",
+                "result": _completed_result_list(),
+            }
+        },
+        status_code=200,
+    )
+    output = run_auto(sample_pdf, env=ENV)
+    assert output == _extraction_output()
+    # Both the classifier and the routed extraction endpoint were called.
+    called_urls = [req.url for req in requests_mock.request_history]
+    assert CLASSIFIER_POST_URL in called_urls
+    assert remito_url in called_urls
+
+
+def test_run_auto_propagates_classification_failure(requests_mock, sample_pdf):
+    envelopes = _classifier_envelopes({"documento_valido": False, "tipo_documento": None})
+    requests_mock.post(
+        CLASSIFIER_POST_URL,
+        json={
+            "message": {
+                "execution_id": "exec-classify-5",
+                "execution_status": "COMPLETED",
+                "result": _classifier_completed_result_list(envelopes),
+            }
+        },
+        status_code=200,
+    )
+    with pytest.raises(ExtractionFailedError):
+        run_auto(sample_pdf, env=ENV)
+
+
 # --- main() CLI exit codes -------------------------------------------------
 
 
@@ -285,3 +480,67 @@ def test_main_exits_0_and_prints_json(requests_mock, sample_pdf, capsys, monkeyp
     assert exit_code == 0
     printed = json.loads(capsys.readouterr().out)
     assert printed == _extraction_output()
+
+
+def test_main_without_type_goes_through_auto_classify_path(
+    requests_mock, sample_pdf, capsys, monkeypatch
+):
+    for key, value in ENV.items():
+        monkeypatch.setenv(key, value)
+
+    envelopes = _classifier_envelopes({"tipo_documento": "factura"})
+    requests_mock.post(
+        CLASSIFIER_POST_URL,
+        json={
+            "message": {
+                "execution_id": "exec-main-auto-1",
+                "execution_status": "COMPLETED",
+                "result": _classifier_completed_result_list(envelopes),
+            }
+        },
+        status_code=200,
+    )
+    requests_mock.post(
+        POST_URL,
+        json={
+            "message": {
+                "execution_id": "exec-main-auto-2",
+                "execution_status": "COMPLETED",
+                "result": _completed_result_list(),
+            }
+        },
+        status_code=200,
+    )
+    exit_code = main(["--file", sample_pdf])
+    assert exit_code == 0
+    printed = json.loads(capsys.readouterr().out)
+    assert printed == _extraction_output()
+    called_urls = [req.url for req in requests_mock.request_history]
+    assert CLASSIFIER_POST_URL in called_urls
+
+
+def test_main_with_type_never_calls_classifier(requests_mock, sample_pdf, capsys, monkeypatch):
+    """--type is a fast-path override: the classifier deployment must never
+    be hit. Deliberately does NOT mock CLASSIFIER_POST_URL, so any accidental
+    call to it raises requests_mock.NoMockAddress and fails this test."""
+    monkeypatch.setenv("UNSTRACT_BASE_URL", ENV["UNSTRACT_BASE_URL"])
+    monkeypatch.setenv("UNSTRACT_ORG", ENV["UNSTRACT_ORG"])
+    monkeypatch.setenv("FACTURA_API_NAME", ENV["FACTURA_API_NAME"])
+    monkeypatch.setenv("FACTURA_API_KEY", ENV["FACTURA_API_KEY"])
+    requests_mock.post(
+        POST_URL,
+        json={
+            "message": {
+                "execution_id": "exec-main-typed-1",
+                "execution_status": "COMPLETED",
+                "result": _completed_result_list(),
+            }
+        },
+        status_code=200,
+    )
+    exit_code = main(["--type", "factura", "--file", sample_pdf])
+    assert exit_code == 0
+    printed = json.loads(capsys.readouterr().out)
+    assert printed == _extraction_output()
+    called_urls = [req.url for req in requests_mock.request_history]
+    assert CLASSIFIER_POST_URL not in called_urls
