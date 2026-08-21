@@ -1,0 +1,25 @@
+# Schema: Document Classifier (routing envelope — NOT extracted document data)
+# Contract/documentation only; NOT consumed by client/validate.py at runtime.
+# validate.py expects a root dict and its _TYPE_MAP has no `bool` type; this
+# schema's root is an ARRAY of envelope objects and `documento_valido` is a
+# bool, so it is intentionally left out of the runtime-validated schemas.
+# See design decision D3 (sdd/classifier-endpoint/design).
+#
+# Format: field: type
+#   - Nested objects are mappings of field: type
+#   - Repeating groups are sequences (list) with a single item schema
+#   - Types used here: str, int, bool, list (documentation only — runtime
+#     schemas restrict to str/float/int/list, see note above)
+document_type: document_classifier
+
+# The classifier's response root is an ARRAY of the envelope below, one per
+# comprobante found in the submitted document (see client-orchestration
+# scenario "Classifier returns multiple comprobantes" in the spec — only the
+# first documento_valido=true entry is acted on by client.py).
+item:
+  pagina_origen: int
+  documento_valido: bool
+  region: list          # [x0, y0, x1, y1] normalized floats; bbox UNVERIFIED
+  tipo_documento: str   # factura | remito | carta_de_porte (absent when documento_valido=false)
+  tipo_comprobante: str # literal title as printed, e.g. "FACTURA A", "REMITO R"
+  observaciones: str
